@@ -13,11 +13,12 @@ app = Flask(__name__)
 
 # Once we are done with the database, we are going to create database.
 # we need to configure our database. I've explained this part before. Lets have a look at these configuration. 
+# All sensitive credentials are now loaded from environment variables for security
 app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-app.config['MYSQL_DATABASE_USER'] = 'admin'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Oliver_1'
-app.config['MYSQL_DATABASE_DB'] = 'phonebook'
-app.config['MYSQL_DATABASE_PORT'] = 3306
+app.config['MYSQL_DATABASE_USER'] = os.getenv('MYSQL_DATABASE_USER')
+app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
+app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
+app.config['MYSQL_DATABASE_PORT'] = int(os.getenv('MYSQL_DATABASE_PORT', 3306))
 
 mysql = MySQL() # We are using this function to initialize mysql 
 mysql.init_app(app) 
@@ -42,15 +43,18 @@ def init_phonebook_db():
 # Write a function named `find_persons` which finds persons' record using the keyword from the phonebook table in the db,and returns result as list of dictionary 
 # `[{'id': 1, 'name':'XXXX', 'number': 'XXXXXX'}]`.
 
-# This function is to find my results that has "keyword" into database
+# This function is to find my results that has "keyword" into database
 def find_persons(keyword):
-    # You are very familiar with this query. This query will select all columns where the name like keyword. strip will remove all the white spaces, and lower will turn uppercase into lowercase.
-    query = f"""
-    SELECT * FROM phonebook WHERE name like '%{keyword.strip().lower()}%';
+    # Using parameterized query to prevent SQL injection attacks
+    # The %s placeholder is replaced safely by the database driver
+    query = """
+    SELECT * FROM phonebook WHERE name like %s;
     """
-    cursor.execute(query) # We've executed query first
-    result = cursor.fetchall() # I've got the result and assign them result variable. 
-    persons =[{'id':row[0], 'name':row[1].strip().title(), 'number':row[2]} for row in result] # this is a list comprehension, if there is a result coming from database, They are located these results one by one into the list and assigned it to the person variable. title makes the first letter capital
+    # Prepare the search pattern with wildcards and pass as a tuple parameter
+    search_pattern = '%' + keyword.strip().lower() + '%'
+    cursor.execute(query, (search_pattern,)) # We've executed query with parameter
+    result = cursor.fetchall() # I've got the result and assign them result variable. 
+    persons =[{'id':row[0], 'name':row[1].strip().title(), 'number':row[2]} for row in result] # this is a list comprehension, if there is a result coming from database, They are located these results one by one into the list and assigned it to the person variable. title makes the first letter capital
     if len(persons) == 0: # if there is no result, thanks to this if condition, No result massages is assigned to the persons variable.
         persons = [{'name':'No Result', 'number':'No Result'}] 
     return persons
@@ -59,43 +63,44 @@ def find_persons(keyword):
 # Write a function named `insert_person` which inserts person into the phonebook table in the db,
 # and returns text info about result of the operation
 
-# We've defined insert_person function. at this time, I'll put name and number as parameter. 
+# We've defined insert_person function. at this time, I'll put name and number as parameter. 
 def insert_person(name, number):
-    # We've first checked if there is a same person in my database. Thats why, I need to use exact name here with strip and lower methods.
-    query = f"""
-    SELECT * FROM phonebook WHERE name like '{name.strip().lower()}';
+    # We've first checked if there is a same person in my database using parameterized query
+    query = """
+    SELECT * FROM phonebook WHERE name like %s;
     """
-    cursor.execute(query)
+    cursor.execute(query, (name.strip().lower(),))
     row = cursor.fetchone()
     if row is not None: # If the row is not none, it means, I have a row that has same name given by a user, We'll return user with a massage
         return f'Person with name {row[1].title()} already exits.'
 
-    # If our database doesn't have any name given by user, we can add that name into it. 
-    insert = f"""
+    # If our database doesn't have any name given by user, we can add that name into it using parameterized query
+    insert = """
     INSERT INTO phonebook (name, number)
-    VALUES ('{name.strip().lower()}', '{number}');
+    VALUES (%s, %s);
     """
-    cursor.execute(insert)
+    cursor.execute(insert, (name.strip().lower(), number))
     result = cursor.fetchall()
     return f'Person {name.strip().title()} added to Phonebook successfully' # person given by user added to phonebook 
 
 # Write a function named `update_person` which updates the person's record in the phonebook table,
 # and returns text info about result of the operation
 def update_person(name, number):
-    query = f"""
-    SELECT * FROM phonebook WHERE name like '{name.strip().lower()}';
+    # Check if person exists using parameterized query
+    query = """
+    SELECT * FROM phonebook WHERE name like %s;
     """
-    cursor.execute(query)
+    cursor.execute(query, (name.strip().lower(),))
     row = cursor.fetchone()
     if row is None: # First we need to control if there is any person with the same name into our database. if we don't have, a warning massage will raise
         return f'Person with name {name.strip().title()} does not exist.'
-    # if there is a person with the given name, we can update it.
-    update = f"""
+    # if there is a person with the given name, we can update it using parameterized query
+    update = """
     UPDATE phonebook
-    SET name='{row[1]}', number = '{number}'
-    WHERE id= {row[0]};
+    SET name=%s, number = %s
+    WHERE id= %s;
     """
-    cursor.execute(update)
+    cursor.execute(update, (row[1], number, row[0]))
 
     return f'Phone record of {name.strip().title()} is updated successfully'
 
@@ -103,20 +108,21 @@ def update_person(name, number):
 # Write a function named `delete_person` which deletes person record from the phonebook table in the db,
 # and returns returns text info about result of the operation
 def delete_person(name):
-    query = f"""
-    SELECT * FROM phonebook WHERE name like '{name.strip().lower()}';
+    # Check if person exists using parameterized query
+    query = """
+    SELECT * FROM phonebook WHERE name like %s;
     """
-    cursor.execute(query)
+    cursor.execute(query, (name.strip().lower(),))
     row = cursor.fetchone()
     if row is None: # Again we need to control if we have this person. then, If we don't have, there is seen a warning massage like this
         return f'Person with name {name.strip().title()} does not exist, no need to delete.'
 
-    # If we have this person, we'll delete his row using the querry.
-    delete = f"""
+    # If we have this person, we'll delete their row using parameterized query
+    delete = """
     DELETE FROM phonebook
-    WHERE id= {row[0]};
+    WHERE id= %s;
     """
-    cursor.execute(delete) # And a magssage will be shown to be informed.
+    cursor.execute(delete, (row[0],)) # And a magssage will be shown to be informed.
     return f'Phone record of {name.strip().title()} is deleted from the phonebook successfully'
 
 # Write a function named `find_records` which finds phone records by keyword using `GET` and `POST` methods,

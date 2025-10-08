@@ -1,0 +1,64 @@
+# Terraform Variables Configuration Template
+# ==========================================
+# Copy this file to terraform.tfvars and fill in your actual values
+# NEVER commit terraform.tfvars to Git (it's already in .gitignore)
+#
+# Usage:
+#   cp terraform.tfvars.example terraform.tfvars
+#   # Then edit terraform.tfvars with your actual values
+
+# AWS EC2 Configuration
+# ---------------------
+# Your AWS EC2 key pair name for SSH access
+key_name = "your-key-pair-name"
+
+# EC2 instance type (default: t2.micro for free tier)
+instance_type = "t2.micro"
+
+
+# GitHub Configuration
+# --------------------
+# Your GitHub username (for cloning the repository)
+git-name = "your-github-username"
+
+# Your GitHub Personal Access Token
+# Generate at: https://github.com/settings/tokens
+# Required scopes: repo (full control of private repositories)
+git-token = "ghp_your_github_personal_access_token_here"
+
+
+# Route53 DNS Configuration
+# --------------------------
+# Your Route53 hosted zone name (without trailing dot)
+# Example: "example.com" or "yourdomain.com"
+hosted-zone = "yourdomain.com"
+
+# Record name (optional, only if different from default)
+# Example: "phonebook" will create phonebook.yourdomain.com
+# record-name = "phonebook"
+
+
+# RDS Database Configuration
+# ---------------------------
+# Database name (alphanumeric only, no special characters)
+db-name = "phonebook"
+
+# Database master username
+# Must begin with a letter and contain only alphanumeric characters
+db-user = "admin"
+
+# Database master password
+# Requirements:
+# - At least 8 characters
+# - Must contain at least one uppercase letter, one lowercase letter, and one number
+# - Can contain special characters except: / (slash), ' (single quote), " (double quote), @ (at sign)
+db-password = "YourSecurePassword123"
+
+
+# Security Notes:
+# ===============
+# 1. Never commit terraform.tfvars to version control
+# 2. Use strong, unique passwords for database
+# 3. Store sensitive values in AWS Secrets Manager or Parameter Store for production
+# 4. Rotate GitHub tokens regularly
+# 5. Consider using environment variables instead: TF_VAR_db_password=xxx
