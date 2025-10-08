@@ -44,7 +44,8 @@ resource "aws_launch_template" "asg-lt" {
         db-password = var.db-password,
         db-name = var.db-name,
         user-data-git-token = var.git-token, 
-        user-data-git-name = var.git-name 
+        user-data-git-name = var.git-name,
+        user-data-git-repo = var.git-repo
     }))
 
     tag_specifications {

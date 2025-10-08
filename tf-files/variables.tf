@@ -16,6 +16,12 @@ variable "git-name" {
     default     = "" # DO NOT write actual values here - use terraform.tfvars instead
 }
 
+variable "git-repo" {
+    type        = string
+    description = "GitHub repository name (without .git extension)"
+    default     = "phonebook"
+}
+
 variable "record-name" {
     type        = string
     description = "Route53 record name (optional)"

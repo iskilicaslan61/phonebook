@@ -21,6 +21,10 @@ instance_type = "t2.micro"
 # Your GitHub username (for cloning the repository)
 git-name = "your-github-username"
 
+# Your GitHub repository name (without .git)
+# If you forked or renamed this repo, update this value
+git-repo = "phonebook"
+
 # Your GitHub Personal Access Token
 # Generate at: https://github.com/settings/tokens
 # Required scopes: repo (full control of private repositories)

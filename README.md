@@ -102,12 +102,24 @@ terraform apply
 
 ### Detailed Installation Steps
 
-### Step 1: Clone the Repository
+### Step 1: Fork or Clone the Repository
 
-```bash
-git clone https://github.com/YOUR_USERNAME/phonebook.git
-cd phonebook
-```
+**Option A: Fork the Repository (Recommended)**
+1. Go to the repository on GitHub
+2. Click "Fork" to create your own copy
+3. Clone your forked repository:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/phonebook.git
+   cd phonebook
+   ```
+
+**Option B: Clone and Create Your Own Repo**
+1. Clone this repository
+2. Create a new repository on GitHub (can be named anything)
+3. Push the code to your new repository
+4. Update `terraform.tfvars` with your repository name
+
+**Important:** The EC2 instances will clone the code from YOUR GitHub repository during deployment, so you need your own copy with your modifications.
 
 ### Step 2: Configure Variables
 
@@ -129,6 +141,7 @@ instance_type = "t2.micro"
 
 # GitHub Configuration
 git-name  = "your-github-username"
+git-repo  = "phonebook"              # Your repo name (change if you renamed it)
 git-token = "ghp_your_github_token_here"
 
 # Route53 Configuration
@@ -169,6 +182,29 @@ terraform apply
 Type `yes` when prompted to confirm the deployment.
 
 ## 📖 Usage
+
+## 🔄 How Repository Cloning Works
+
+When you deploy the infrastructure, here's what happens:
+
+1. **Terraform** reads your `terraform.tfvars` file with your GitHub credentials
+2. **EC2 User Data Script** runs during instance launch
+3. **Git Clone** downloads the code from YOUR GitHub repository:
+   ```bash
+   git clone https://$TOKEN@github.com/$USER/$REPO.git
+   ```
+4. **Application Starts** from the cloned code
+
+**Why You Need Your Own Repository:**
+- Each EC2 instance needs to download the application code
+- They clone from YOUR GitHub account (specified in `git-name`)
+- If you modify the code, instances will get YOUR version
+- This allows you to customize the application for your needs
+
+**Repository Name Configuration:**
+- Default: `phonebook` (set in `variables.tf`)
+- If you rename your repo: Update `git-repo` in `terraform.tfvars`
+- Example: If your repo is named `my-phonebook-app`, set `git-repo = "my-phonebook-app"`
 
 ### Accessing the Application
 

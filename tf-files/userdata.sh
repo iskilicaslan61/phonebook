@@ -6,7 +6,8 @@ pip3 install flask_mysql
 dnf install git -y
 TOKEN=${user-data-git-token}
 USER=${user-data-git-name}
-cd /home/ec2-user && git clone https://$TOKEN@github.com/$USER/phonebook.git
+REPO=${user-data-git-repo}
+cd /home/ec2-user && git clone https://$TOKEN@github.com/$USER/$REPO.git
 
 # Export all database credentials as environment variables for security
 export MYSQL_DATABASE_HOST=${db-endpoint}
@@ -15,4 +16,4 @@ export MYSQL_DATABASE_PASSWORD=${db-password}
 export MYSQL_DATABASE_DB=${db-name}
 export MYSQL_DATABASE_PORT=3306
 
-python3 /home/ec2-user/phonebook/phonebook-app.py
+python3 /home/ec2-user/$REPO/phonebook-app.py
